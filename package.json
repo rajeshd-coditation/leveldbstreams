@@ -1,0 +1,29 @@
+{
+  "name": "leveldbstreams",
+  "version": "0.0.1",
+  "description": "Simple readable and writable streams on top of leveldb together with a key/value server.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/gizur/leveldbstreams.git"
+  },
+  "keywords": [
+    "LevelDb",
+    "Streams",
+    "key/value",
+    "store"
+  ],
+  "author": "Jonas Colmsjö",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gizur/leveldbstreams/issues"
+  },
+  "homepage": "https://github.com/gizur/leveldbstreams#readme",
+  "dependencies": {
+    "level": "^1.4.0"
+  }
+}
