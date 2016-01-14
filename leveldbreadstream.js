@@ -13,7 +13,11 @@ LevelDbReadStream = function (options, dbname, key) {
 
   var db = levelup(dbname);
   db.get(key, function (err, value) {
-    if (err) return self.emit('error', err);
+    if (err) {
+      db.close();
+      self.emit('error', err);
+      return;
+    }
 
     if (self.readCalled) {
       self.push(value);

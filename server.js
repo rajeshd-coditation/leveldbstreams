@@ -40,6 +40,12 @@ server.on('request', function (req, res) {
 
   if (req.method === 'GET') {
     var rs = new LevelDbReadStream(null, './mydb', key);
+
+    rs.on('error', function (err) {
+      error(err);
+      res.end(''+err); 
+    });
+
     rs.pipe(res);
   }
 
