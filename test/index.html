@@ -1,0 +1,124 @@
+<html>
+
+<body>
+
+  <canvas id="canvasEl"></canvas>
+
+  <script src="./bower_components/ydn.db/jsc/ydn.db-dev.js"></script>
+  <script src="./bower_components/remote/remote.js"></script>
+
+  <script>
+    // imports
+    // =======
+
+    var R = window['remote'];
+    var xhr = R.remote;
+
+    // Logging
+    // ========
+    var log = console.log.bind(console);
+    var debug = console.log.bind(console, 'DEBUG');
+    var info = console.log.bind(console, 'INFO');
+
+    // variables
+    // =========
+
+    // Functions
+    // =========
+
+    function saveAsLocalBase64_(url, cb) {
+      var xhr = new XMLHttpRequest();
+      xhr.responseType = 'blob';
+      xhr.onload = function() {
+        var reader = new FileReader();
+        reader.onloadend = function() {
+          db.put('file', {
+            data: reader.result
+          }, 'base64').done(function(key) {
+            if (cb) cb(key);
+          });
+        }
+        reader.readAsDataURL(xhr.response);
+      };
+      xhr.open('GET', url);
+      xhr.send();
+    }
+
+    function saveAsLocalBase64(database, store, key, url) {
+
+      return new Promise(function(fulfill, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        
+        xhr.onload = function() {
+          var reader = new FileReader();
+          reader.onloadend = function() {
+
+            var schema = {
+              stores: [{
+                name: store,
+                type: 'TEXT' // data type of 'file' object store key
+              }]
+            };
+            var db = new ydn.db.Storage(databse, schema);
+
+            db.put(store, {
+              data: reader.result
+            }, key)
+            .done(function(res) {fulfill(res);}, function(err){reject(err);});
+          }
+          reader.readAsDataURL(xhr.response);
+        };
+        
+        xhr.open('GET', url);
+        xhr.send();
+      });
+    }
+
+    function displayB64Image(data) {
+      var canvas = document.getElementById("canvasEl");
+      var ctx = canvas.getContext("2d");
+      var image = new Image();
+      image.onload = function() {
+        ctx.drawImage(image, 0, 0);
+      };
+      image.src = data;
+      canvas.height = 900;
+      canvas.width = 900;
+    }
+
+    function showBase64() {
+      db.get('file', 'base64').done(function(res) {
+        displayB64Image(res.data);
+      }, function(e) {
+        log(e.message || e);
+      });
+    }
+
+    function saveRemoteBase64() {
+      db.get('file', 'base64').done(function(res) {
+        xhr('http://localhost:3000/base64', 'POST', res.data);
+      }, function(e) {
+        log(e.message || e);
+      });
+    }
+
+    // Call two functions with the same arguments
+    var P = function(f, g) {
+      return function() {
+        f.apply(this, arguments);
+        g.apply(this, arguments);
+      };
+    };
+
+    // Main
+    // =====
+
+    url = 'http://www.gizur.com/img/projektledning_w767.png';
+    saveAsLocalBase64(url, P(showBase64, sendBase64));
+
+  </script>
+
+</body>
+
+</html>
