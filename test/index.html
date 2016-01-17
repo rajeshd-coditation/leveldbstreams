@@ -12,68 +12,32 @@
     // =======
 
     var R = window['remote'];
-    var xhr = R.remote;
+    var xhr = R.xhr;
 
     // Logging
     // ========
     var log = console.log.bind(console);
     var debug = console.log.bind(console, 'DEBUG');
+    var error = console.log.bind(console, 'ERROR');
     var info = console.log.bind(console, 'INFO');
 
-    // variables
-    // =========
+    // Variables
+    // ========
+
+    var database = 'local-cache';
+    var store = 'images';
+
+    var schema = {
+      stores: [{
+        name: store,
+        type: 'TEXT' // data type of 'file' object store key
+      }]
+    };
+    var db = new ydn.db.Storage(database, schema);
+
 
     // Functions
-    // =========
-
-    function saveAsLocalBase64_(url, cb) {
-      var xhr = new XMLHttpRequest();
-      xhr.responseType = 'blob';
-      xhr.onload = function() {
-        var reader = new FileReader();
-        reader.onloadend = function() {
-          db.put('file', {
-            data: reader.result
-          }, 'base64').done(function(key) {
-            if (cb) cb(key);
-          });
-        }
-        reader.readAsDataURL(xhr.response);
-      };
-      xhr.open('GET', url);
-      xhr.send();
-    }
-
-    function saveAsLocalBase64(database, store, key, url) {
-
-      return new Promise(function(fulfill, reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = 'blob';
-        
-        xhr.onload = function() {
-          var reader = new FileReader();
-          reader.onloadend = function() {
-
-            var schema = {
-              stores: [{
-                name: store,
-                type: 'TEXT' // data type of 'file' object store key
-              }]
-            };
-            var db = new ydn.db.Storage(databse, schema);
-
-            db.put(store, {
-              data: reader.result
-            }, key)
-            .done(function(res) {fulfill(res);}, function(err){reject(err);});
-          }
-          reader.readAsDataURL(xhr.response);
-        };
-        
-        xhr.open('GET', url);
-        xhr.send();
-      });
-    }
+    // ========
 
     function displayB64Image(data) {
       var canvas = document.getElementById("canvasEl");
@@ -87,35 +51,37 @@
       canvas.width = 900;
     }
 
-    function showBase64() {
-      db.get('file', 'base64').done(function(res) {
+    function showBase64(database, store, key) {
+      db.get(store, key).done(function(res) {
         displayB64Image(res.data);
       }, function(e) {
         log(e.message || e);
       });
     }
 
-    function saveRemoteBase64() {
-      db.get('file', 'base64').done(function(res) {
-        xhr('http://localhost:3000/base64', 'POST', res.data);
-      }, function(e) {
-        log(e.message || e);
-      });
-    }
-
-    // Call two functions with the same arguments
-    var P = function(f, g) {
-      return function() {
-        f.apply(this, arguments);
-        g.apply(this, arguments);
-      };
-    };
-
     // Main
     // =====
 
-    url = 'http://www.gizur.com/img/projektledning_w767.png';
-    saveAsLocalBase64(url, P(showBase64, sendBase64));
+    var key = 'tuctuc';
+    var url1 = 'http://www.gizur.com/img/projektledning_w767.png';
+    var url2 = 'http://localhost:3000/base64';
+
+    R.xhrToDbAsBase64(database, store, key, url1, 'GET')
+      .then(function(res) {
+        debug('IN xhrToDbAsBase64 THEN');
+        return R.xhrFromDb(database, store, key, url2, 'POST')
+      })
+      .then(function(res) {
+        debug('Before clear db', res);
+        return db.clear().done(function() {
+          debug('After clear', res);
+          return R.xhrToDb(database, store, key, url2, 'GET').then(function(res) {
+            debug('xhrToDb');
+            showBase64(database, store, key);
+          })
+        })
+      })
+      .catch(error);
 
   </script>
 

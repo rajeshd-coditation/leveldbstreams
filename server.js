@@ -3,6 +3,9 @@ var server = http.Server();
 var LevelDbWriteStream = require('./leveldbwritestream.js');
 var LevelDbReadStream = require('./leveldbreadstream.js');
 
+var levelup = require('levelup');
+var db = levelup('./mydb');
+
 var log = console.log.bind(console);
 var error = console.log.bind(console, 'ERROR');
 var debug = console.log.bind(console, 'DEBUG');
@@ -26,7 +29,7 @@ server.on('request', function (req, res) {
   }
 
   if (req.method === 'POST') {
-    var ws = new LevelDbWriteStream(null, './mydb', key);
+    var ws = new LevelDbWriteStream(null, db, key);
     req.pipe(ws);
 
     ws.on('finish', function () {
@@ -39,11 +42,11 @@ server.on('request', function (req, res) {
   }
 
   if (req.method === 'GET') {
-    var rs = new LevelDbReadStream(null, './mydb', key);
+    var rs = new LevelDbReadStream(null, db, key);
 
     rs.on('error', function (err) {
       error(err);
-      res.end(''+err); 
+      res.end('' + err);
     });
 
     rs.pipe(res);
@@ -54,6 +57,7 @@ server.on('request', function (req, res) {
 
 process.on('SIGINT', function () {
   console.log("Caught interrupt signal");
+  db.close();
   server.close();
   setTimeout(process.exit, 1000);
 });

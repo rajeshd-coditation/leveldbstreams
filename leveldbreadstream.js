@@ -1,20 +1,17 @@
 var util = require('util');
 var Readable = require('stream').Readable;
-var levelup = require('levelup');
 
 var debug = console.log.bind(console, 'DEBUG');
 
-LevelDbReadStream = function (options, dbname, key) {
+LevelDbReadStream = function (options, db, key) {
   var self = this;
   Readable.call(this, options);
 
   self.readCalled = false;
   self.buffer = '';
 
-  var db = levelup(dbname);
   db.get(key, function (err, value) {
     if (err) {
-      db.close();
       self.emit('error', err);
       return;
     }
@@ -25,7 +22,6 @@ LevelDbReadStream = function (options, dbname, key) {
     } else {
       self.buffer = value;
     }
-    db.close();
   });
 
   this.on('finish', function () {
