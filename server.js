@@ -52,7 +52,6 @@ server.on('request', function (req, res) {
     rs.pipe(res);
   }
 
-
 });
 
 process.on('SIGINT', function () {
