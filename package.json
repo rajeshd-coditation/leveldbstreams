@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/gizur/leveldbstreams#readme",
   "dependencies": {
+    "leveldown":"3.0.1",
     "level": "^1.4.0"
   }
 }
